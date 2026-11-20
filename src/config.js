@@ -67,6 +67,7 @@ export function resolveAgentDefinitions(options = {}) {
       permissions: toPermissions(src.permission, role === "build" || role === "plan" ? "allow" : "deny"),
     };
     if (src.hidden) def.hidden = true;
+    if (src.steps !== undefined) def.steps = src.steps;
     if (byRole[role]) def.model = parseModelRef(byRole[role]);
     defs[role] = def;
   }
@@ -78,13 +79,14 @@ export function resolveAgentDefinitions(options = {}) {
   return out;
 }
 
-function applyAgentDef(agent, def) {
+export function applyAgentDef(agent, def) {
   agent.description = def.description;
   agent.mode = def.mode;
   agent.system = def.system;
   agent.permissions = def.permissions;
   if (def.hidden !== undefined) agent.hidden = def.hidden;
   if (def.model !== undefined) agent.model = def.model;
+  if (def.steps !== undefined) agent.steps = def.steps;
   return agent;
 }
 

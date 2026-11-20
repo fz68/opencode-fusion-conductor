@@ -22,6 +22,7 @@ before(async () => {
     AGENTS: agents.AGENTS,
     PROFILES: profiles.PROFILES,
     resolveAgentDefinitions: config.resolveAgentDefinitions,
+    applyAgentDef: config.applyAgentDef,
     registerConductor: config.registerConductor,
     ROLES: config.ROLES,
     COMMANDS: commands.COMMANDS,
@@ -284,6 +285,12 @@ describe('resolveAgentDefinitions', () => {
       assert.equal(typeof defs[role].system, 'string');
       assert.ok(Array.isArray(defs[role].permissions), `${role} permissions must be a V2 array`);
     }
+  });
+
+  test('reviewer carries a numeric 40-step budget', () => {
+    const { defs } = resolveAgentDefinitions({});
+    assert.equal(typeof defs.reviewer.steps, 'number');
+    assert.equal(defs.reviewer.steps, 40);
   });
 
   test('build denies edit, grep, glob, and list in the resolved permissions', () => {
@@ -564,6 +571,20 @@ describe('profile and model resolution', () => {
     assert.deepEqual(withExplore.exploreModel, { providerID: 'x', id: 'explore' });
     const withoutExplore = resolveAgentDefinitions({ models: { build: 'x/build' } });
     assert.ok(!('exploreModel' in withoutExplore));
+  });
+});
+
+describe('applyAgentDef', () => {
+  const baseDef = { description: 'd', mode: 'subagent', system: 's', permissions: [] };
+
+  test('copies steps onto the agent when the def has one', () => {
+    const agent = mods.applyAgentDef({ id: 'reviewer' }, { ...baseDef, steps: 40 });
+    assert.equal(agent.steps, 40);
+  });
+
+  test('leaves agent.steps untouched when the def has none', () => {
+    const agent = mods.applyAgentDef({ id: 'reviewer', steps: 7 }, baseDef);
+    assert.equal(agent.steps, 7);
   });
 });
 
