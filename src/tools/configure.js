@@ -22,6 +22,7 @@ import {
   requireConductorCaller,
   resolveToolDirectory,
 } from "./config-file.js";
+import { applyResolved } from "../config.js";
 
 const MODEL_PATTERN = /^[^\s/]+\/[^\s/]+$/;
 const OPTION_KEYS = ["profile", "models", "remove", "audit", "claude", "depth"];
@@ -192,12 +193,21 @@ export function configureTool(ctx) {
       fs.writeFileSync(backup, found.bytes, { mode });
       atomicWrite(found.file, newBytes, mode);
 
+      await applyResolved(ctx, next);
+
+      const restartLines =
+        args.profile !== undefined || args.depth !== undefined ||
+        args.audit !== undefined || args.claude !== undefined
+          ? ["Restart opencode for changes to take effect."]
+          : [];
+
       return {
         content: [
           `Updated ${found.file}`,
           ...summary,
           `Backup: ${backup}`,
-          "Restart opencode for changes to take effect.",
+          "Live-applied: models updated for the running session.",
+          ...restartLines,
         ].join("\n"),
       };
     },

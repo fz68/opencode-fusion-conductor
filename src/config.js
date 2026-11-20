@@ -90,7 +90,10 @@ export function applyAgentDef(agent, def) {
   return agent;
 }
 
-export async function registerConductor(ctx, options = {}) {
+// Apply the resolved agent/model wiring to the running instance. Exported so
+// conductor_configure can hot-apply model swaps without restarting opencode.
+export async function applyResolved(ctx, options = {}) {
+  if (!ctx) return;
   const opts = { ...options };
   const { defs, exploreModel, defaultModel, titleModel } = resolveAgentDefinitions(opts);
 
@@ -118,6 +121,11 @@ export async function registerConductor(ctx, options = {}) {
       editor.default.set(defaultModel.providerID, defaultModel.id);
     });
   }
+}
+
+export async function registerConductor(ctx, options = {}) {
+  const opts = { ...options };
+  await applyResolved(ctx, opts);
 
   await ctx.command.transform((editor) => {
     editor.add({
